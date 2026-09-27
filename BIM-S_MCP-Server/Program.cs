@@ -1,3 +1,4 @@
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
 if (args.Length == 1 && args[0] == "--watch-worker")
@@ -11,6 +12,9 @@ var options = new McpServerOptions
     ServerInfo = new() { Name = "BIM-S_MCP-Server", Version = "1.0.0" },
     ToolCollection =
     [
+        McpServerTool.Create(GetModelAsync, new() { Name = "get-model", Description = "Последовательно получает элементы, параметры и HTML-отчёт" }),
+        McpServerTool.Create(ModelElementsReport.CreateAsync, new() { Name = "create-model-elements-report", Description = "Создаёт HTML из сохранённой выгрузки параметров" }),
+        McpServerTool.Create(ModelParametersExport.ExportAsync, new() { Name = "get-model-elements-parameters", Description = "Сохраняет встроенные параметры элементов и типов в JSON" }),
         McpServerTool.Create(ModelWatch.StartAsync, new() { Name = "start-model-watch", Description = "Начать фоновое наблюдение модели" }),
         McpServerTool.Create(ModelWatch.StopAsync, new() { Name = "stop-model-watch", Description = "Остановить фоновое наблюдение" }),
         McpServerTool.Create(ModelWatch.SummaryAsync, new() { Name = "get-model-summary", Description = "Сводка сохранённого снимка модели" }),
@@ -49,7 +53,11 @@ catch (OperationCanceledException) when (shutdown.IsCancellationRequested)
 {
     // Normal shutdown on Ctrl+C.
 }
-static async Task<string> GetModelElementsAsync(
+static Task<CallToolResult> GetModelAsync(CancellationToken cancellationToken) =>
+    ModelPipeline.RunAsync(GetModelElementsAsync, ModelParametersExport.ExportAsync,
+        ModelElementsReport.CreateAsync, cancellationToken);
+
+static async Task<CallToolResult> GetModelElementsAsync(
     CancellationToken cancellationToken)
 {
 object Property(string key, string label, string identifier = "", string method = "parameter",
@@ -84,6 +92,7 @@ var properties = new Dictionary<string, object[]>
 };
 var request = System.Text.Json.JsonSerializer.Serialize(new
 {
+    includeDocumentSession = true,
     collection = "elements",
     fields = new[] { "ElementId", "Category", "Name", "FamilyName", "TypeName", "SystemProperties" },
     propertyRequests = properties,
@@ -96,7 +105,20 @@ var request = System.Text.Json.JsonSerializer.Serialize(new
         "OST_StructuralFoundation", "OST_AreaRein"
     }
 });
-return await RevitBridgeClient.SendAsync(request, cancellationToken);
+var response = await RevitBridgeClient.SendAsync(request, cancellationToken);
+using var document = System.Text.Json.JsonDocument.Parse(response);
+var root = document.RootElement;
+if (root.TryGetProperty("error", out var error))
+    return new CallToolResult { IsError = true, Content = [new TextContentBlock { Text = error.GetString() ?? "Ошибка Revit" }] };
+if (!root.TryGetProperty("documentSession", out var session) ||
+    !Guid.TryParseExact(session.GetString(), "N", out _) ||
+    !root.TryGetProperty("elements", out var elements) || elements.ValueKind != System.Text.Json.JsonValueKind.Array)
+    throw new ModelContextProtocol.McpException("Bridge не вернул элементы с documentSession. Обновите RevitAddin.");
+return new CallToolResult
+{
+    Content = [new TextContentBlock { Text = elements.GetRawText() }],
+    StructuredContent = root.Clone()
+};
 }
 static async Task<string> RevitPingAsync(CancellationToken cancellationToken)
 {
