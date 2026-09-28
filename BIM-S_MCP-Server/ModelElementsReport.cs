@@ -6,7 +6,7 @@ using ModelContextProtocol.Protocol;
 
 internal static class ModelElementsReport
 {
-    private const string Folder = @"D:\BIM-S-MCP_Отчеты_Версии модели";
+    private const string Folder = @"D:\BIM-S-MCP-1_Отчеты_Версии модели";
     private const string Css = """
 
             *{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#17243a;font:16px/1.5 Segoe UI,Arial,sans-serif}

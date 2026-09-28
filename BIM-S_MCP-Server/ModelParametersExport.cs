@@ -74,7 +74,7 @@ internal static class ModelParametersExport
             documentSession, status, requestedElementIds = ids, unprocessedElementIds = remaining, elements, errors
         };
         cancellationToken.ThrowIfCancellationRequested();
-        var folder = @"D:\BIM-S-MCP_Отчеты_Версии модели";
+        var folder = @"D:\BIM-S-MCP-1_Отчеты_Версии модели";
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, $"element-parameters_{DateTime.UtcNow:yyyyMMddTHHmmssfffffffZ}_{Guid.NewGuid():N}.json");
         var temp = path + ".tmp";

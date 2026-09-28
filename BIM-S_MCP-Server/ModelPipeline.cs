@@ -3,7 +3,7 @@ using ModelContextProtocol.Protocol;
 
 internal static class ModelPipeline
 {
-    private const string Folder = @"D:\BIM-S-MCP_Отчеты_Версии модели";
+    private const string Folder = @"D:\BIM-S-MCP-1_Отчеты_Версии модели";
 
     internal static async Task<CallToolResult> RunAsync(
         Func<CancellationToken, Task<CallToolResult>> getElements,
