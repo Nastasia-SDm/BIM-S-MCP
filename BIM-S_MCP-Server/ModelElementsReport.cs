@@ -25,13 +25,13 @@ internal static class ModelElementsReport
     {
         var path = Path.GetFullPath(filePath);
         if (!string.Equals(Path.GetDirectoryName(path), Folder, StringComparison.OrdinalIgnoreCase) ||
-            !Path.GetFileName(path).StartsWith("element-parameters_", StringComparison.Ordinal) ||
+            !Path.GetFileName(path).EndsWith("_model.json", StringComparison.Ordinal) ||
             !path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             throw new McpException("Передайте filePath JSON-выгрузки get-model-elements-parameters из папки версий модели.");
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path, cancellationToken));
         var html = Render(document.RootElement, File.GetLastWriteTimeUtc(path));
         Directory.CreateDirectory(Folder);
-        var output = Path.Combine(Folder, $"model-elements_{DateTime.Now:dd.MM.yyyy_HH.mm.ss}_{Guid.NewGuid():N}.html");
+        var output = Path.ChangeExtension(path, ".html");
         var temp = output + ".tmp";
         try
         {

@@ -51,7 +51,11 @@ internal static class ModelPipeline
             {
                 Content = [new TextContentBlock { Text = $"Статус: complete; обработано элементов: {count}; JSON: {jsonPath}; HTML: {htmlPath}" }],
                 StructuredContent = JsonSerializer.SerializeToElement(new
-                    { status = "complete", processedElementCount = count, jsonPath, htmlPath })
+                    {
+                        status = "complete", processedElementCount = count, jsonPath, htmlPath,
+                        snapshot = JsonSerializer.Deserialize<JsonElement>(
+                            await File.ReadAllTextAsync(jsonPath, cancellationToken))
+                    })
             };
         }
         catch (OperationCanceledException)

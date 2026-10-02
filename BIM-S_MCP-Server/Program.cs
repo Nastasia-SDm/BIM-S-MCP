@@ -12,7 +12,7 @@ var options = new McpServerOptions
     ServerInfo = new() { Name = "BIM-S_MCP-Server", Version = "1.0.0" },
     ToolCollection =
     [
-        McpServerTool.Create(GetModelAsync, new() { Name = "get-model", Description = "Последовательно получает элементы, параметры и HTML-отчёт" }),
+        McpServerTool.Create(GetModelAsync, new() { Name = "get-model", Description = "Получает текущее состояние модели Revit, сохраняет новый snapshot JSON и HTML, возвращает snapshot в StructuredContent. Для текущего состояния достаточно этого инструмента. Для изменений во времени сначала вызовите его, затем сравните previous/latest через MCP3 с mode=3d. Сам по себе изменения не определяет." }),
         McpServerTool.Create(ModelElementsReport.CreateAsync, new() { Name = "create-model-elements-report", Description = "Создаёт HTML из сохранённой выгрузки параметров" }),
         McpServerTool.Create(ModelParametersExport.ExportAsync, new() { Name = "get-model-elements-parameters", Description = "Сохраняет встроенные параметры элементов и типов в JSON" }),
         McpServerTool.Create(ModelWatch.StartAsync, new() { Name = "start-model-watch", Description = "Начать фоновое наблюдение модели" }),

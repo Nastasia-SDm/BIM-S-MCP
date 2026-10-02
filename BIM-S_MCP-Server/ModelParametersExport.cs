@@ -76,7 +76,29 @@ internal static class ModelParametersExport
         cancellationToken.ThrowIfCancellationRequested();
         var folder = @"D:\BIM-S-MCP-1_Отчеты_Версии модели";
         Directory.CreateDirectory(folder);
-        var path = Path.Combine(folder, $"element-parameters_{DateTime.UtcNow:yyyyMMddTHHmmssfffffffZ}_{Guid.NewGuid():N}.json");
+
+        const string modelKey = "Test_AI-Work";
+
+        var existingVersions = Directory
+            .EnumerateFiles(folder, $"{modelKey}_V*_model.json")
+            .Select(Path.GetFileNameWithoutExtension)
+            .Select(name =>
+            {
+                var marker = name?.Split("_V", StringSplitOptions.None).LastOrDefault();
+                return int.TryParse(marker?.Replace("_model", ""), out var version)
+                    ? version
+                    : 0;
+            })
+            .ToArray();
+
+        var nextVersion = existingVersions.Length == 0
+            ? 1
+            : existingVersions.Max() + 1;
+
+        var versionName = $"V{nextVersion:000}";
+        var path = Path.Combine(
+            folder,
+            $"{modelKey}_{versionName}_model.json");
         var temp = path + ".tmp";
         try
         {
